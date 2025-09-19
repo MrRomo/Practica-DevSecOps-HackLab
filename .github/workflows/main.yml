@@ -48,11 +48,11 @@ jobs:
       - uses: actions/checkout@v4
       - name: Semgrep (bloqueante)
         run: |
-          docker run --rm -v "$PWD:/src" returntocorp/semgrep:latest \
+          podman run --rm -v "$PWD:/src" returntocorp/semgrep:latest \
             semgrep scan --error --config p/ci --config .semgrep
       - name: Export SARIF (para pestaña Security)
         run: |
-          docker run --rm -v "$PWD:/src" returntocorp/semgrep:latest \
+          podman run --rm -v "$PWD:/src" returntocorp/semgrep:latest \
             semgrep scan --config p/ci --config .semgrep --sarif -o semgrep.sarif || true
       - uses: github/codeql-action/upload-sarif@v3
         with: { sarif_file: semgrep.sarif }
@@ -82,7 +82,7 @@ jobs:
       - name: Build imagen de la app objetivo
         run: |
           cd "${APP_DIR}"
-          docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+          podman build -t ${IMAGE_NAME}:${IMAGE_TAG} .
       - name: SBOM (Syft)
         uses: anchore/sbom-action@v0
         with:
@@ -149,12 +149,12 @@ jobs:
 
       # ── Alternativa (comentada) si publicas la imagen en GHCR y quieres firmar la imagen:
       # - name: Login GHCR
-      #   run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      #   run: echo ${{ secrets.GITHUB_TOKEN }} | podman login ghcr.io -u ${{ github.actor }} --password-stdin
       # - name: Push a GHCR
       #   run: |
       #     export IMG="ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ github.sha }}"
-      #     docker tag ${IMAGE_NAME}:${IMAGE_TAG} "$IMG"
-      #     docker push "$IMG"
+      #     podman tag ${IMAGE_NAME}:${IMAGE_TAG} "$IMG"
+      #     podman push "$IMG"
       # - name: Sign imagen en GHCR
       #   run: cosign sign --yes --key cosign.key "ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ github.sha }}" <<< "$COSIGN_PASSWORD"
       # - name: Verify imagen (gate)
@@ -170,7 +170,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Cargar imagen local al clúster kind
-        run: kind load docker-image ${IMAGE_NAME}:${IMAGE_TAG} --name ${KIND_CLUSTER}
+        run: kind load podman-image ${IMAGE_NAME}:${IMAGE_TAG} --name ${KIND_CLUSTER}
       - name: Helm upgrade/install
         run: |
           helm upgrade --install ${SERVICE_RELEASE_NAME} charts/demo-app \
@@ -189,7 +189,7 @@ jobs:
         run: |
           kubectl port-forward svc/${SERVICE_RELEASE_NAME} 8080:80 & echo $! > pf.pid
           sleep 3
-          docker run --rm -t owasp/zap2docker-stable \
+          podman run --rm -t owasp/zap2podman-stable \
             zap-baseline.py -t http://localhost:8080 -x zap.xml
           kill $(cat pf.pid) || true
 
