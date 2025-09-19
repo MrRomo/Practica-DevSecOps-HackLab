@@ -1,0 +1,17 @@
+# .semgrep.yml
+# Config básica con algunas reglas útiles multi-lenguaje.
+# Puedes ampliarla con reglas oficiales usando: `semgrep scan --config p/owasp-top-ten --config p/secrets`
+
+rules:
+  # --- JavaScript / TypeScript ---
+  - id: js.no-eval
+    message: Evita `eval()`. Usa alternativas seguras.
+    severity: ERROR
+    languages: [javascript, typescript]
+    pattern: eval(...)
+
+  - id: js.insecure-document-write
+    message: Evita `document.write`, puede causar XSS y otros problemas.
+    severity: WARNING
+    languages: [javascript, typescript]
+    pattern: document.write(...)
